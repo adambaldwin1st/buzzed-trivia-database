@@ -27,7 +27,7 @@ jobs:
 
       - name: Assume IAM Role
         id: iam
-        uses: aws-actions/configure-aws-credentials@v1.7.0
+        uses: aws-actions/configure-aws-credentials@master
         with:
           role-to-assume: arn:aws:iam::274747834986:role/buzzed_trivia_database_role
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
