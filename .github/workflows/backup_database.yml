@@ -6,24 +6,33 @@ name: Database Backup
 on:
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
+      - name: Setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
 
       - name: Assume IAM Role
         id: iam
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
           role-to-assume: arn:aws:iam::274747834986:role/buzzed_trivia_database_role
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: us-east-1
+
 
       # Hello from AWS: WhoAmI
       - name: Sts GetCallerIdentity
