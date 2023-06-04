@@ -1,0 +1,34 @@
+name: Database Backup
+
+#  on:
+#    schedule:
+#      - cron: "0 0 * * *"
+on:
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Retrieve private key from AWS Secrets Manager
+        run: |
+          export PRIVATE_KEY=$(aws secretsmanager get-secret-value --secret-id buzzed-trivia/private-key --query 'SecretString' --output text)
+
+      - name: Create backup and upload to S3
+        run: |
+          echo "$PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@44.203.70.232 'pg_dump -U postgres -h localhost buzzed_trivia_hive > backup.sql'
+          aws s3 cp backup.sql s3://buzzed-trivia-database-backups/backup.sql
+
+      - name: Cleanup
+        run: |
+          rm -f private_key.pem
