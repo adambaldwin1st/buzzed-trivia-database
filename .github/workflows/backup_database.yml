@@ -12,11 +12,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
+
+      - name: Assume IAM Role
+        id: iam
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::274747834986:role/buzzed_trivia_database_role
+          aws-region: us-east-1
 
       - name: Retrieve private key from AWS Secrets Manager
         run: |
