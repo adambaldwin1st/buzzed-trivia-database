@@ -37,23 +37,17 @@ jobs:
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ env.AWS_REGION }}
 
-
-      # Hello from AWS: WhoAmI
-      - name: Sts GetCallerIdentity
+      - name: Retrieve private key from AWS Secrets Manager
         run: |
-          aws sts get-caller-identity
+          export PRIVATE_KEY=$(aws secretsmanager get-secret-value --secret-id buzzed-trivia/private-key --query 'SecretString' --output text)
 
-#      - name: Retrieve private key from AWS Secrets Manager
-#        run: |
-#          export PRIVATE_KEY=$(aws secretsmanager get-secret-value --secret-id buzzed-trivia/private-key --query 'SecretString' --output text)
-#
-#      - name: Create backup and upload to S3
-#        run: |
-#          echo "$PRIVATE_KEY" > private_key.pem
-#          chmod 600 private_key.pem
-#          ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@44.203.70.232 'pg_dump -U postgres -h localhost buzzed_trivia_hive > backup.sql'
-#          aws s3 cp backup.sql s3://buzzed-trivia-database-backups/backup.sql
-#
-#      - name: Cleanup
-#        run: |
-#          rm -f private_key.pem
+      - name: Create backup and upload to S3
+        run: |
+          echo "$PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@44.203.70.232 'pg_dump -U postgres -h localhost buzzed_trivia_hive > backup.sql'
+          aws s3 cp backup.sql s3://buzzed-trivia-database-backups/backup.sql
+
+      - name: Cleanup
+        run: |
+          rm -f private_key.pem
