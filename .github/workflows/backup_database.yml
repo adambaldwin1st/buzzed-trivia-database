@@ -44,9 +44,7 @@ jobs:
       - name: Create backup and upload to S3
         run: |
           echo "$PRIVATE_KEY" > buzzed-trivia.pem
-#          base64 -d private_key_encoded.base64 > buzzed-trivia.pem
           chmod 600 buzzed-trivia.pem
-          cat buzzed-trivia.pem
           ssh -o StrictHostKeyChecking=no -i buzzed-trivia.pem ubuntu@44.203.70.232 'pg_dump -U postgres -h localhost buzzed_trivia_hive > backup.sql'
           aws s3 cp backup.sql s3://buzzed-trivia-database-backups/backup.sql
 
