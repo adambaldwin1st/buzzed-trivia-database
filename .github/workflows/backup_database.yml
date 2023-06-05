@@ -35,7 +35,7 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::274747834986:role/buzzed_trivia_database_role
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
-          aws-region: ${{ env.AWS_region }}
+          aws-region: ${{ env.AWS_REGION }}
 
 
       # Hello from AWS: WhoAmI
