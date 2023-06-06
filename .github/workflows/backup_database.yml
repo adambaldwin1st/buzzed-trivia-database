@@ -45,7 +45,7 @@ jobs:
       - name: Create backup and upload to S3
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i buzzed-trivia.pem ${USER_NAME}@${HOSTNAME} 'pg_dump -U postgres -h localhost buzzed_trivia_hive > backup.sql'
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} 'pg_dump -U postgres -h localhost buzzed_trivia_hive > backup.sql'
           aws s3 cp backup.sql s3://buzzed-trivia-database-backups/backup.sql
 
       - name: Cleanup
