@@ -16,18 +16,23 @@ permissions:
 
 jobs:
   backup:
+    env:
+      PRIVATE_KEY: ${{ secrets.BUZZED_TRIVIA_PRIVATE_KEY }}
+      HOSTNAME: ${{ secrets.SSH_HOST }}
+      USER_NAME: ${{ secrets.USER_NAME }}
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-      - name: Setup node
-        uses: actions/setup-node@v2
-        with:
-          node-version: '20'
+#      - name: Install dependencies
+#        run: |
+#          sudo apt-get update
+#          sudo apt-get install -y postgresql-client
+#      - name: Setup node
+#        uses: actions/setup-node@v2
+#        with:
+#          node-version: '20'
 
       - name: Assume IAM Role
         id: iam
@@ -39,12 +44,10 @@ jobs:
 
       - name: Create backup and upload to S3
         run: |
-          echo ${{ secrets.BUZZED_TRIVIA_SSH_KEY }} > buzzed-trivia.pem
-          chmod 600 buzzed-trivia.pem
-          cat buzzed-trivia.pem
-          ssh -o StrictHostKeyChecking=no -i buzzed-trivia.pem ubuntu@44.203.70.232 'pg_dump -U postgres -h localhost buzzed_trivia_hive > backup.sql'
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i buzzed-trivia.pem ${USER_NAME}@${HOSTNAME} 'pg_dump -U postgres -h localhost buzzed_trivia_hive > backup.sql'
           aws s3 cp backup.sql s3://buzzed-trivia-database-backups/backup.sql
 
       - name: Cleanup
         run: |
-          rm -f private_key.pem
+          rm -f private_key
