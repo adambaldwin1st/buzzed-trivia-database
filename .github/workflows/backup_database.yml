@@ -5,7 +5,8 @@ name: Database Backup
 #    branches:
 #      - main
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *" # Run every day
 
 
 jobs:
@@ -19,13 +20,6 @@ jobs:
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.BUZZED_TRIVIA_PRIVATE_KEY }}
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                aws-region: us-east-1
 
       - name: SSH into remote host and backup database
         run: |
