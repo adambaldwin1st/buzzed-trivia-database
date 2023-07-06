@@ -29,7 +29,7 @@ jobs:
 
       - name: SSH into remote host and backup database
         run: |
-          ssh -o "StrictHostKeyChecking=no" ${{ secrets.E2_USER_NAME }}@${{ secrets.E2_IP_ADDRESS }} <<'ENDSSH'
+          ssh -o "StrictHostKeyChecking=no" ${{ secrets.E2_USER_NAME }}@${{ secrets.E2_PUBLIC_IP }} <<'ENDSSH'
             cd /etc/postgresql
             PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} sudo -u postgres pg_dump -U postgres the_hive > /var/www/html/backup.sql
             sudo apt-get install -y awscli
