@@ -1,53 +1,38 @@
 name: Database Backup
 
-#  on:
-#    schedule:
-#      - cron: "0 0 * * *"
+#on:
+#  push:
+#    branches:
+#      - main
 on:
   workflow_dispatch:
-
-env:
-  AWS_REGION: "us-east-1"
-
-# Permission can be added at job level or workflow level
-permissions:
-  id-token: write   # This is required for requesting the JWT
-  contents: read    # This is required for actions/checkout
+    
 
 jobs:
   backup:
-    env:
-      PRIVATE_KEY: ${{ secrets.BUZZED_TRIVIA_PRIVATE_KEY }}
-      HOSTNAME: ${{ secrets.SSH_HOST }}
-      USER_NAME: ${{ secrets.USER_NAME }}
-
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-#      - name: Install dependencies
-#        run: |
-#          sudo apt-get update
-#          sudo apt-get install -y postgresql-client
-#      - name: Setup node
-#        uses: actions/setup-node@v2
-#        with:
-#          node-version: '20'
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -t rsa ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
-      - name: Assume IAM Role
-        id: iam
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: SSH into EC2 and create database backup
+        run: |
+          ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_PUBLIC_IP }} "pg_dump -U postgres the_hive > backup.sql"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: arn:aws:iam::274747834986:role/buzzed_trivia_database_role
-          role-session-name: GitHub_to_AWS_via_FederatedOIDC
-          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
-      - name: Create backup and upload to S3
-        run: |
-          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} 'pg_dump -U postgres -h localhost buzzed_trivia_hive > backup.sql'
-          aws s3 cp backup.sql s3://buzzed-trivia-database-backups/backup.sql
+      - name: Install AWS CLI
+        run: sudo apt-get install -y awscli
 
-      - name: Cleanup
-        run: |
-          rm -f private_key
+      - name: Upload backup file to S3
+        run: aws s3 cp backup.sql s3://buzzed-trivia-database-backups/
