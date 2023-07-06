@@ -32,6 +32,7 @@ jobs:
           ssh -o "StrictHostKeyChecking=no" ${{ secrets.USER }}@${{ secrets.EC2_PUBLIC_IP }} <<'ENDSSH'
             cd /etc/postgresql
             PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} sudo -u postgres pg_dump -U postgres the_hive > /var/www/html/backup.sql
+            cd /var/www/html
             sudo apt-get install -y awscli
             aws s3 cp backup.sql s3://buzzed-trivia-database-backups/
           ENDSSH
