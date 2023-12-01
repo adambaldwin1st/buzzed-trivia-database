@@ -5,8 +5,7 @@ name: Database Backup
 #    branches:
 #      - main
 on:
-  schedule:
-    - cron: "0 0 * * 0" # Run every week
+  workflow_dispatch: 
 
 
 jobs:
